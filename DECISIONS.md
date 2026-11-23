@@ -14,3 +14,10 @@ This log records every non-obvious architecture and design decision for the proj
 | DEC-008 | Table Kinds | Restrict `table_kind` to `dine_in` and `counter`. | Delivery and takeaway are explicitly out of scope for the dine-in / counter ordering model. |
 | DEC-009 | Restaurant Suspension | Store `suspended_at timestamptz` instead of a boolean `is_suspended`. | Captures both the active suspension state and the exact audit timestamp when suspension occurred. |
 | DEC-010 | Secrets Safety | Automated pre-commit/CI check fails if any `.env` other than `.env.example` is tracked or staged. | Protects developer and production credentials from accidental git commits. |
+| DEC-011 | Guest Session Mount | Open table session via Server Action after client mount instead of page GET. | Prevents crawlers, link unfurlers, and browser prefetching from creating ghost table sessions. |
+| DEC-012 | Price Protection | Re-price every line item server-side and trigger a "was X, now Y" confirmation if total changes. | Prevents client-side price tampering while providing transparent UX when menu prices update. |
+| DEC-013 | Mobile Density | Use compact 72-76px horizontal cards with dedicated 44px '+' quick-add touch targets. | Satisfies the requirement of >=5 items visible on standard 390px mobile screens without sacrificing tap accessibility. |
+| DEC-014 | Terminal Step Mapping | Status `served` dynamically derives guest UI label as 'Collected' (PRE_PAY) or 'Served' (POST_PAY). | Avoids duplicate backend terminal states while maintaining clear domain vocabulary for both dining modes. |
+| DEC-015 | Modifier UX & Accessibility | Auto-scroll and focus the first invalid modifier group on submit without summary error banners. | Guides mobile users directly to missing required inputs without wasting vertical screen space on redundant banner text. |
+| DEC-016 | Next.js 16 Streaming | Use export const instant = false for dynamic QR guest routes under Next.js 16 cacheComponents. | Enables Partial Prerendering (PPR) dynamic streaming without failing build-time static generation on uncached table params. |
+

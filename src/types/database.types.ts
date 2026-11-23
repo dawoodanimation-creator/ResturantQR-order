@@ -86,6 +86,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       branches: {
         Row: {
@@ -127,6 +128,14 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "branches_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       tables: {
         Row: {
@@ -168,6 +177,14 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "fk_tables_branch"
+            columns: ["branch_id", "restaurant_id"]
+            referencedRelation: "branches"
+            referencedColumns: ["id", "restaurant_id"]
+          }
+        ]
       }
       table_sessions: {
         Row: {
@@ -200,6 +217,14 @@ export interface Database {
           opened_at?: string
           closed_at?: string | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "fk_sessions_table"
+            columns: ["table_id", "restaurant_id"]
+            referencedRelation: "tables"
+            referencedColumns: ["id", "restaurant_id"]
+          }
+        ]
       }
       categories: {
         Row: {
@@ -235,6 +260,14 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "categories_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       menu_items: {
         Row: {
@@ -291,6 +324,14 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "fk_menu_items_category"
+            columns: ["category_id", "restaurant_id"]
+            referencedRelation: "categories"
+            referencedColumns: ["id", "restaurant_id"]
+          }
+        ]
       }
       modifier_groups: {
         Row: {
@@ -329,6 +370,14 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "modifier_groups_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       modifier_options: {
         Row: {
@@ -370,6 +419,14 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "fk_modifier_options_group"
+            columns: ["modifier_group_id", "restaurant_id"]
+            referencedRelation: "modifier_groups"
+            referencedColumns: ["id", "restaurant_id"]
+          }
+        ]
       }
       menu_item_modifier_groups: {
         Row: {
@@ -390,6 +447,20 @@ export interface Database {
           modifier_group_id?: string
           display_order?: number
         }
+        Relationships: [
+          {
+            foreignKeyName: "fk_mimg_item"
+            columns: ["menu_item_id", "restaurant_id"]
+            referencedRelation: "menu_items"
+            referencedColumns: ["id", "restaurant_id"]
+          },
+          {
+            foreignKeyName: "fk_mimg_group"
+            columns: ["modifier_group_id", "restaurant_id"]
+            referencedRelation: "modifier_groups"
+            referencedColumns: ["id", "restaurant_id"]
+          }
+        ]
       }
       branch_menu_item_overrides: {
         Row: {
@@ -422,6 +493,20 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "fk_bmio_branch"
+            columns: ["branch_id", "restaurant_id"]
+            referencedRelation: "branches"
+            referencedColumns: ["id", "restaurant_id"]
+          },
+          {
+            foreignKeyName: "fk_bmio_item"
+            columns: ["menu_item_id", "restaurant_id"]
+            referencedRelation: "menu_items"
+            referencedColumns: ["id", "restaurant_id"]
+          }
+        ]
       }
       branch_order_counters: {
         Row: {
@@ -442,6 +527,7 @@ export interface Database {
           counter_date?: string
           last_order_number?: number
         }
+        Relationships: []
       }
       orders: {
         Row: {
@@ -531,6 +617,20 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "fk_orders_table"
+            columns: ["table_id", "restaurant_id"]
+            referencedRelation: "tables"
+            referencedColumns: ["id", "restaurant_id"]
+          },
+          {
+            foreignKeyName: "fk_orders_session"
+            columns: ["table_session_id", "restaurant_id"]
+            referencedRelation: "table_sessions"
+            referencedColumns: ["id", "restaurant_id"]
+          }
+        ]
       }
       order_items: {
         Row: {
@@ -572,6 +672,14 @@ export interface Database {
           total_paisa?: number
           created_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "fk_order_items_order"
+            columns: ["order_id", "restaurant_id"]
+            referencedRelation: "orders"
+            referencedColumns: ["id", "restaurant_id"]
+          }
+        ]
       }
       order_status_events: {
         Row: {
@@ -610,6 +718,14 @@ export interface Database {
           reason?: string | null
           created_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "fk_status_events_order"
+            columns: ["order_id", "restaurant_id"]
+            referencedRelation: "orders"
+            referencedColumns: ["id", "restaurant_id"]
+          }
+        ]
       }
       payments: {
         Row: {
@@ -663,6 +779,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       call_bells: {
         Row: {
@@ -701,6 +818,7 @@ export interface Database {
           created_at?: string
           resolved_at?: string | null
         }
+        Relationships: []
       }
       feedback: {
         Row: {
@@ -733,6 +851,7 @@ export interface Database {
           comments?: string | null
           created_at?: string
         }
+        Relationships: []
       }
       staff: {
         Row: {
@@ -777,6 +896,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       print_agents: {
         Row: {
@@ -812,6 +932,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       print_jobs: {
         Row: {
@@ -850,6 +971,7 @@ export interface Database {
           created_at?: string
           printed_at?: string | null
         }
+        Relationships: []
       }
       subscription_plans: {
         Row: {
@@ -876,6 +998,7 @@ export interface Database {
           is_active?: boolean
           created_at?: string
         }
+        Relationships: []
       }
       restaurant_subscriptions: {
         Row: {
@@ -908,6 +1031,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       feature_flags: {
         Row: {
@@ -934,6 +1058,7 @@ export interface Database {
           description?: string | null
           created_at?: string
         }
+        Relationships: []
       }
       vouchers: {
         Row: {
@@ -984,8 +1109,10 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
     }
+    Views: Record<string, never>
     Functions: {
       generate_daily_order_number: {
         Args: {
@@ -1017,5 +1144,15 @@ export interface Database {
         Returns: StaffRole | null
       }
     }
+    Enums: {
+      billing_mode: BillingMode
+      table_kind: TableKind
+      order_status: OrderStatus
+      payment_status: PaymentStatus
+      payment_method: PaymentMethod
+      bell_type: BellType
+      staff_role: StaffRole
+    }
+    CompositeTypes: Record<string, never>
   }
 }
