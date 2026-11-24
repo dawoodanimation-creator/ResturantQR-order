@@ -13,10 +13,11 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps) {
   const { slug, token } = await params
-  const context = await getGuestMenuAction(slug, token)
-  if (!context) {
+  const res = await getGuestMenuAction(slug, token)
+  if (res.status !== 'success') {
     return { title: 'Menu - Restaurant QR' }
   }
+  const context = res.data
   return {
     title: `${context.restaurant.name} - Table ${context.table.tableNumber} Menu`,
     description: `Browse menu and order online from your table at ${context.restaurant.name}.`,
@@ -25,11 +26,17 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function GuestPage({ params }: PageProps) {
   const { slug, token } = await params
-  const context = await getGuestMenuAction(slug, token)
+  const res = await getGuestMenuAction(slug, token)
 
-  if (!context) {
+  if (res.status === 'not_found') {
     notFound()
   }
+
+  if (res.status === 'db_error') {
+    throw new Error(res.error || 'Database connection error')
+  }
+
+  const context = res.data
 
   // Restaurant Suspension Gate (SPEC §4.F: suspended restaurants show a notice instead of the app)
   if (context.restaurant.isSuspended) {

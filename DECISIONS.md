@@ -24,4 +24,5 @@ This log records every non-obvious architecture and design decision for the proj
 | DEC-018 | Unit Test Runner | Use Node.js native test runner (node --test) with experimental strip-types for pure helper unit testing. | Provides zero-dependency, sub-second execution for unit tests without bloating dependencies. |
 | DEC-019 | Rate Limiting Enforcement | Enforce 15s device cooldown, <=5 orders/10m per device, and <=20 orders/10m per session via pure evaluator. | Exactly enforces SPEC §3 Rule 6 protecting against double-taps and table spam while allowing multi-guest shared table ordering. |
 | DEC-020 | Staging No-Index | Emit X-Robots-Tag: noindex, nofollow and robots metadata across all routes. | Prevents staging environments, test QR links, and demo menus from being indexed by search engines. |
+| DEC-021 | Guest Menu Error Separation | Return discriminated union ({ status: 'success' | 'not_found' | 'db_error' }) from getGuestMenuAction. | Prevents misleading 404s when the database is unreachable, routing connection errors to error.tsx retry UI. |
 

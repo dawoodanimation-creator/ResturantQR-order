@@ -9,7 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "check:secrets": "node scripts/check-no-secrets.mjs",
-    "test:unit": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/cart.test.ts tests/validations.test.ts tests/rate-limit.test.ts",
+    "test:unit": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/cart.test.ts tests/validations.test.ts tests/rate-limit.test.ts tests/guest-menu.test.ts",
     "test": "npm run check:secrets && npm run test:unit && npm run typecheck && npm run lint"
   },
   "dependencies": {

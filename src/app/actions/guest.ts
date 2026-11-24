@@ -87,48 +87,73 @@ export interface GuestRestaurantContext {
   items: GuestMenuItem[]
 }
 
+export type GuestMenuResult =
+  | { status: 'success'; data: GuestRestaurantContext }
+  | { status: 'not_found'; message: string }
+  | { status: 'db_error'; error: string }
+
 /**
- * Fetch guest menu and restaurant context by slug and table QR token
+ * Fetch guest menu and restaurant context by slug and table QR token.
+ * Returns a discriminated union separating genuine 404s (not_found) from database/network outages (db_error).
  */
-export async function getGuestMenuAction(slug: string, qrToken: string): Promise<GuestRestaurantContext | null> {
-  const supabase = createAdminClient()
+export async function getGuestMenuAction(slug: string, qrToken: string): Promise<GuestMenuResult> {
+  try {
+    const supabase = createAdminClient()
 
-  // 1. Fetch restaurant
-  const { data: restaurant, error: restErr } = await supabase
-    .from('restaurants')
-    .select('*')
-    .eq('slug', slug)
-    .single()
+    // 1. Fetch restaurant
+    const { data: restaurant, error: restErr } = await supabase
+      .from('restaurants')
+      .select('*')
+      .eq('slug', slug)
+      .single()
 
-  if (restErr || !restaurant) {
-    return null
-  }
+    if (restErr) {
+      if (restErr.code === 'PGRST116') {
+        return { status: 'not_found', message: `Restaurant "${slug}" not found` }
+      }
+      return { status: 'db_error', error: restErr.message || 'Failed to query restaurant' }
+    }
+    if (!restaurant) {
+      return { status: 'not_found', message: `Restaurant "${slug}" not found` }
+    }
 
-  // 2. Fetch table by QR token
-  const { data: table, error: tableErr } = await supabase
-    .from('tables')
-    .select('*')
-    .eq('restaurant_id', restaurant.id)
-    .eq('qr_token', qrToken)
-    .eq('is_active', true)
-    .single()
+    // 2. Fetch table by QR token
+    const { data: table, error: tableErr } = await supabase
+      .from('tables')
+      .select('*')
+      .eq('restaurant_id', restaurant.id)
+      .eq('qr_token', qrToken)
+      .eq('is_active', true)
+      .single()
 
-  if (tableErr || !table) {
-    return null
-  }
+    if (tableErr) {
+      if (tableErr.code === 'PGRST116') {
+        return { status: 'not_found', message: `Table QR code "${qrToken}" not found or inactive` }
+      }
+      return { status: 'db_error', error: tableErr.message || 'Failed to query table' }
+    }
+    if (!table) {
+      return { status: 'not_found', message: `Table QR code "${qrToken}" not found or inactive` }
+    }
 
-  // 3. Fetch branch
-  const { data: branch, error: branchErr } = await supabase
-    .from('branches')
-    .select('*')
-    .eq('id', table.branch_id)
-    .eq('restaurant_id', restaurant.id)
-    .eq('is_active', true)
-    .single()
+    // 3. Fetch branch
+    const { data: branch, error: branchErr } = await supabase
+      .from('branches')
+      .select('*')
+      .eq('id', table.branch_id)
+      .eq('restaurant_id', restaurant.id)
+      .eq('is_active', true)
+      .single()
 
-  if (branchErr || !branch) {
-    return null
-  }
+    if (branchErr) {
+      if (branchErr.code === 'PGRST116') {
+        return { status: 'not_found', message: 'Assigned branch not found or inactive' }
+      }
+      return { status: 'db_error', error: branchErr.message || 'Failed to query branch' }
+    }
+    if (!branch) {
+      return { status: 'not_found', message: 'Assigned branch not found or inactive' }
+    }
 
   // Effective billing mode (branch override takes priority)
   const effectiveBillingMode: BillingMode = branch.billing_mode_override || restaurant.billing_mode
@@ -250,37 +275,44 @@ export async function getGuestMenuAction(slug: string, qrToken: string): Promise
     }
   })
 
-  return {
-    restaurant: {
-      id: restaurant.id,
-      name: restaurant.name,
-      nameUr: restaurant.name_ur,
-      slug: restaurant.slug,
-      timezone: restaurant.timezone,
-      currency: restaurant.currency,
-      billingMode: restaurant.billing_mode,
-      taxBps: restaurant.tax_bps,
-      serviceChargeBps: restaurant.service_charge_bps,
-      brandColor: restaurant.brand_color,
-      logoUrl: restaurant.logo_url,
-      showHalalTag: restaurant.show_halal_tag,
-      isSuspended: Boolean(restaurant.suspended_at),
-    },
-    branch: {
-      id: branch.id,
-      name: branch.name,
-      nameUr: branch.name_ur,
-      billingMode: effectiveBillingMode,
-    },
-    table: {
-      id: table.id,
-      tableNumber: table.table_number,
-      kind: table.kind,
-      capacity: table.capacity,
-      qrToken: table.qr_token,
-    },
-    categories,
-    items,
+    return {
+      status: 'success',
+      data: {
+        restaurant: {
+          id: restaurant.id,
+          name: restaurant.name,
+          nameUr: restaurant.name_ur,
+          slug: restaurant.slug,
+          timezone: restaurant.timezone,
+          currency: restaurant.currency,
+          billingMode: restaurant.billing_mode,
+          taxBps: restaurant.tax_bps,
+          serviceChargeBps: restaurant.service_charge_bps,
+          brandColor: restaurant.brand_color,
+          logoUrl: restaurant.logo_url,
+          showHalalTag: restaurant.show_halal_tag,
+          isSuspended: Boolean(restaurant.suspended_at),
+        },
+        branch: {
+          id: branch.id,
+          name: branch.name,
+          nameUr: branch.name_ur,
+          billingMode: effectiveBillingMode,
+        },
+        table: {
+          id: table.id,
+          tableNumber: table.table_number,
+          kind: table.kind,
+          capacity: table.capacity,
+          qrToken: table.qr_token,
+        },
+        categories,
+        items,
+      },
+    }
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err.message : 'Database connection error'
+    return { status: 'db_error', error }
   }
 }
 
