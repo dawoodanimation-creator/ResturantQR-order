@@ -174,7 +174,18 @@ export const useCartStore = create<CartStore>()(
     }),
     {
       name: 'restaurant_qr_guest_cart',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          return window.localStorage
+        }
+        // In-memory fallback for SSR and Node.js testing environments
+        const memoryStorage = new Map<string, string>()
+        return {
+          getItem: (key: string) => memoryStorage.get(key) ?? null,
+          setItem: (key: string, value: string) => memoryStorage.set(key, value),
+          removeItem: (key: string) => memoryStorage.delete(key),
+        }
+      }),
       partialize: (state) => ({
         restaurantId: state.restaurantId,
         branchId: state.branchId,

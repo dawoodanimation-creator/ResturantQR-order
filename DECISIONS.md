@@ -20,4 +20,6 @@ This log records every non-obvious architecture and design decision for the proj
 | DEC-014 | Terminal Step Mapping | Status `served` dynamically derives guest UI label as 'Collected' (PRE_PAY) or 'Served' (POST_PAY). | Avoids duplicate backend terminal states while maintaining clear domain vocabulary for both dining modes. |
 | DEC-015 | Modifier UX & Accessibility | Auto-scroll and focus the first invalid modifier group on submit without summary error banners. | Guides mobile users directly to missing required inputs without wasting vertical screen space on redundant banner text. |
 | DEC-016 | Next.js 16 Streaming | Use export const instant = false for dynamic QR guest routes under Next.js 16 cacheComponents. | Enables Partial Prerendering (PPR) dynamic streaming without failing build-time static generation on uncached table params. |
+| DEC-017 | SSR Storage Fallback | Provide in-memory storage fallback for useCartStore when window.localStorage is undefined. | Prevents runtime crashes in Next.js SSR and Node.js testing environments while persisting state in browser. |
+| DEC-018 | Unit Test Runner | Use Node.js native test runner (node --test) with experimental strip-types for pure helper unit testing. | Provides zero-dependency, sub-second execution for unit tests without bloating dependencies. |
 
