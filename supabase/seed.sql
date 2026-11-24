@@ -108,7 +108,9 @@ INSERT INTO tables (id, restaurant_id, branch_id, table_number, kind, capacity, 
 ('11111111-t003-0000-0000-000000000003', '11111111-1111-1111-1111-111111111111', '11111111-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'T-03', 'dine_in', 2, 'qr_kb_clifton_t03_12a7d8c4e5', true),
 -- Chai & Paratha - Gulshan Counter Order Point
 ('22222222-t001-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222', '22222222-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Counter-1', 'counter', 1, 'qr_cp_gulshan_c01_99a8b7c6d5', true),
-('22222222-t002-0000-0000-000000000002', '22222222-2222-2222-2222-222222222222', '22222222-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Table-01', 'dine_in', 4, 'qr_cp_gulshan_t01_33f2e1d0c9', true)
+('22222222-t002-0000-0000-000000000002', '22222222-2222-2222-2222-222222222222', '22222222-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Table-01', 'dine_in', 4, 'qr_cp_gulshan_t01_33f2e1d0c9', true),
+-- The Suspended Café - Main Branch (Suspension Gate Test Table)
+('33333333-t001-0000-0000-000000000001', '33333333-3333-3333-3333-333333333333', '33333333-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'T-01', 'dine_in', 4, 'qr_sc_main_t01_a1b2c3d4e5', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Active Table Session for testing
