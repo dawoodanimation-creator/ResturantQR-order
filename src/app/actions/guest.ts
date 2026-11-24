@@ -7,6 +7,7 @@ import {
   OpenSessionInput,
   PlaceOrderInput,
 } from '@/lib/validations/guest'
+import { evaluateOrderRateLimits } from '@/lib/rate-limit'
 import { BillingMode, OrderStatus } from '@/types/database.types'
 
 export interface MenuItemModifierOption {
@@ -410,45 +411,40 @@ export async function placeOrderAction(rawInput: PlaceOrderInput) {
     }
   }
 
-  // 3. Enforce Device & Session Rate Limits (Hard-won Rule #6)
+  // 3. Enforce Device & Session Rate Limits (Hard-won Rule #6: >=15s between orders, <=5 per 10m/dev, <=20 per 10m/session)
   const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
   const fifteenSecondsAgo = new Date(Date.now() - 15 * 1000).toISOString()
 
-  // Rate limit 1: Check >= 15 seconds since last order from device
-  const { data: lastOrderDevice } = await supabase
-    .from('orders')
-    .select('created_at')
-    .eq('restaurant_id', table.restaurant_id)
-    .eq('device_fingerprint', input.deviceFingerprint)
-    .gte('created_at', fifteenSecondsAgo)
-    .limit(1)
+  const [lastOrderRes, deviceCountRes, sessionCountRes] = await Promise.all([
+    supabase
+      .from('orders')
+      .select('created_at')
+      .eq('restaurant_id', table.restaurant_id)
+      .eq('device_fingerprint', input.deviceFingerprint)
+      .gte('created_at', fifteenSecondsAgo)
+      .limit(1),
+    supabase
+      .from('orders')
+      .select('*', { count: 'exact', head: true })
+      .eq('restaurant_id', table.restaurant_id)
+      .eq('device_fingerprint', input.deviceFingerprint)
+      .gte('created_at', tenMinutesAgo),
+    supabase
+      .from('orders')
+      .select('*', { count: 'exact', head: true })
+      .eq('restaurant_id', table.restaurant_id)
+      .eq('table_session_id', input.sessionId)
+      .gte('created_at', tenMinutesAgo),
+  ])
 
-  if (lastOrderDevice && lastOrderDevice.length > 0) {
-    return { success: false, error: 'Please wait at least 15 seconds between placing orders.' }
-  }
+  const rateLimitDecision = evaluateOrderRateLimits({
+    hasOrderInLast15Seconds: Boolean(lastOrderRes.data && lastOrderRes.data.length > 0),
+    deviceOrderCountLast10Minutes: deviceCountRes.count ?? 0,
+    sessionOrderCountLast10Minutes: sessionCountRes.count ?? 0,
+  })
 
-  // Rate limit 2: Check <= 5 orders per 10 min per device
-  const { count: deviceOrderCount } = await supabase
-    .from('orders')
-    .select('*', { count: 'exact', head: true })
-    .eq('restaurant_id', table.restaurant_id)
-    .eq('device_fingerprint', input.deviceFingerprint)
-    .gte('created_at', tenMinutesAgo)
-
-  if (deviceOrderCount !== null && deviceOrderCount >= 5) {
-    return { success: false, error: 'Order limit reached (maximum 5 orders per 10 minutes per device).' }
-  }
-
-  // Rate limit 3: Check <= 20 orders per 10 min per session
-  const { count: sessionOrderCount } = await supabase
-    .from('orders')
-    .select('*', { count: 'exact', head: true })
-    .eq('restaurant_id', table.restaurant_id)
-    .eq('table_session_id', input.sessionId)
-    .gte('created_at', tenMinutesAgo)
-
-  if (sessionOrderCount !== null && sessionOrderCount >= 20) {
-    return { success: false, error: 'Table session order limit reached. Please call a waiter for assistance.' }
+  if (!rateLimitDecision.allowed) {
+    return { success: false, error: rateLimitDecision.error || 'Rate limit exceeded' }
   }
 
   // 4. Server-Side Re-Pricing from DB (Hard-won Rule #3 & #4)
